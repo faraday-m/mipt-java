@@ -1,19 +1,20 @@
 package edu.phystech;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Account {
+public class DebitCard implements Account, BankEntity {
     private final long id;
     private final Entries entries;
     private double balance;
+    private BonusAccount bonusAccount;
 
-    public Account(long id) {
+    public DebitCard(long id) {
         this.id = id;
         this.entries = new Entries(this);
         this.balance = 0;
+        this.bonusAccount = new BonusAccount(0.05);
     }
 
 
@@ -21,8 +22,13 @@ public class Account {
         return TransactionManager.getTransaction(this, id);
     }
 
+    @Override
     public void addEntry(Entry entry) {
         entries.addEntry(entry);
+    }
+
+    public BonusAccount getBonusAccount() {
+        return bonusAccount;
     }
 
     private void changeBalance(double amount) {
@@ -41,6 +47,7 @@ public class Account {
 
         if ((amount > 0) && ((getBalance() - amount) >= 0)) {
             changeBalance(-amount);
+            bonusAccount.add(amount);
             return true;
         }
         changeBalance(-amount);
@@ -107,6 +114,7 @@ public class Account {
      * @param date
      * @return balance
      */
+    @Override
     public double balanceOn(LocalDate date) {
         double balance = 0;
         for ( Entry e: entries.to(date)) {
@@ -132,5 +140,10 @@ public class Account {
 
     public Collection<Transaction> getPurchases() {
         return entries.getOutcomes().stream().map(e -> e.getTransaction(this)).collect(Collectors.toList());
+    }
+
+    @Override
+    public EntityKey getKey() {
+        return new SimpleEntityKey(EntityKey.EntityType.ACCOUNT, id);
     }
 }

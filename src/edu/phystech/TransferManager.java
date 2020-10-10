@@ -7,26 +7,28 @@ import java.util.Map;
 public class TransferManager {
     private static long id_sequence = 0;
 
-    private Map<Long, Account> accounts;
+    private SimpleEntitiesStorage<Account> accounts;
 
     public TransferManager() {
-        accounts = new LinkedHashMap<>();
+        accounts = new SimpleEntitiesStorage<Account>(d -> ((Account) d).getKey().getId());
     }
 
     public long createAccount() {
         id_sequence += 1;
-        accounts.put(id_sequence, new Account(id_sequence));
+        accounts.save(new DebitCard(id_sequence));
         return id_sequence;
     }
 
-    private Account getAccount(Long id) {
+    private DebitCard getAccount(Long id) {
         if (id == null) return null;
-        return accounts.get(id);
+        return (DebitCard) accounts.findByKey(id).get(0);
     }
 
     public long transferMoney(long originator, long beneficiary, double amount) {
         Transaction transaction = TransactionManager.createTransaction(amount, getAccount(originator), getAccount(beneficiary));
         TransactionManager.executeTransaction(transaction);
+        Transaction bonusTransaction = TransactionManager.createTransaction(amount * getAccount(originator).getBonusAccount().getCashback(), null, getAccount(originator).getBonusAccount());
+        TransactionManager.executeTransaction(bonusTransaction);
         return transaction.getId();
     }
 

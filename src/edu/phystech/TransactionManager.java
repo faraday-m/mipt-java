@@ -1,6 +1,5 @@
 package edu.phystech;
 
-import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -33,7 +32,7 @@ public class TransactionManager {
         }
     }
 
-    private static Map<Account, Map<Long, Transaction>> transactions = new LinkedHashMap<>();
+    private static SimpleEntitiesStorage<Transaction> transactions = new SimpleEntitiesStorage<Transaction>((Object t) -> ((Transaction) t).getOriginator()); //Map<Account, Map<Long, Transaction>> transactions = new LinkedHashMap<>();
     /**
      * Creates and stores transactions
      * @param amount
@@ -52,11 +51,11 @@ public class TransactionManager {
     }
 
     public static Transaction getTransaction(Account account, long id) {
-        return transactions.get(account).get(id);
+        return transactions.findByKey(account).stream().filter((Transaction t) -> (t.getId() == id)).findFirst().get();
     }
 
     public static Collection<Transaction> findAllTransactionsByAccount(Account account) {
-        return transactions.getOrDefault(account, new LinkedHashMap<>()).values();
+        return transactions.findByKey(account);
     }
 
     public static Transaction rollbackTransaction(Transaction transaction) {
@@ -72,8 +71,7 @@ public class TransactionManager {
     }
 
     private static void addTransactionToMap(Account account, Transaction transaction) {
-        transactions.computeIfAbsent(account, k -> new HashMap<>());
-        transactions.get(account).put(transaction.getId(), transaction);
+        transactions.save(transaction);
     }
 
 }

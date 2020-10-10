@@ -1,30 +1,32 @@
 package edu.phystech;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collection;
 
 /**
  * The record of allocating the amount to the account
  * Amount can be either positive or negative depending on originator or beneficiary
  */
-public class Entry implements Comparable {
+public class Entry implements Comparable, BankEntity {
+    private static int idSequence = 0;
     private final Account account;
     private final long transactionId;
     private final double amount;
     private final LocalDateTime time;
+    private final long id;
 
     public Entry(Account account, Transaction transaction, double amount, LocalDateTime time) {
         this.account = account;
         this.transactionId = transaction.getId();
         this.amount = amount;
         this.time = time;
+        this.id = idSequence++;
     }
     public Entry(Account account, long transactionId, double amount, LocalDateTime time) {
         this.account = account;
         this.transactionId = transactionId;
         this.amount = amount;
         this.time = time;
+        this.id = idSequence++;
     }
 
     public Account getAccount() {
@@ -49,6 +51,11 @@ public class Entry implements Comparable {
             return this.getTime().compareTo(((Entry) o).getTime());
         }
         throw new RuntimeException(o.getClass() + " is not an instance of Entry");
+    }
+
+    @Override
+    public EntityKey getKey() {
+        return new SimpleEntityKey(EntityKey.EntityType.ENTRY, id);
     }
 }
 

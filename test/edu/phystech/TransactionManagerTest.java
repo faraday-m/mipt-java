@@ -10,8 +10,8 @@ public class TransactionManagerTest {
 
     @Test
     public void executeTransactionTest() {
-        Account account = new Account(1);
-        Account account2 = new Account(2);
+        DebitCard account = new DebitCard(1);
+        DebitCard account2 = new DebitCard(2);
         Transaction transaction = TransactionManager.createTransaction(100, account, account2);
         Transaction newTransaction = TransactionManager.executeTransaction(transaction);
         assertEquals(transaction.getId(), newTransaction.getId());
@@ -27,8 +27,8 @@ public class TransactionManagerTest {
 
     @Test
     public void rollbackTransactionTest() {
-        Account account = new Account(1);
-        Account account2 = new Account(2);
+        DebitCard account = new DebitCard(1);
+        DebitCard account2 = new DebitCard(2);
         Transaction transaction = TransactionManager.createTransaction(100, account, account2);
         Transaction newTransaction = TransactionManager.executeTransaction(transaction);
         Transaction rolledTransaction = TransactionManager.rollbackTransaction(newTransaction);
@@ -46,8 +46,8 @@ public class TransactionManagerTest {
 
     @Test(expected = IllegalStateException.class)
     public void executeExecutedTransactionTest() {
-        Account account = new Account(1);
-        Account account2 = new Account(2);
+        DebitCard account = new DebitCard(1);
+        DebitCard account2 = new DebitCard(2);
         Transaction transaction = TransactionManager.createTransaction(100, account, account2);
         Transaction newTransaction = TransactionManager.executeTransaction(transaction);
         TransactionManager.executeTransaction(newTransaction);
@@ -55,8 +55,8 @@ public class TransactionManagerTest {
 
     @Test(expected = IllegalStateException.class)
     public void rollbackRolledTransactionTest() {
-        Account account = new Account(1);
-        Account account2 = new Account(2);
+        DebitCard account = new DebitCard(1);
+        DebitCard account2 = new DebitCard(2);
         Transaction transaction = TransactionManager.createTransaction(100, account, account2);
         Transaction newTransaction = TransactionManager.executeTransaction(transaction);
         Transaction rolledTransaction = TransactionManager.rollbackTransaction(newTransaction);
@@ -65,8 +65,8 @@ public class TransactionManagerTest {
 
     @Test(expected = IllegalStateException.class)
     public void rollbackNotExecutedTransactionTest() {
-        Account account = new Account(1);
-        Account account2 = new Account(2);
+        DebitCard account = new DebitCard(1);
+        DebitCard account2 = new DebitCard(2);
         Transaction transaction = TransactionManager.createTransaction(100, account, account2);
         TransactionManager.rollbackTransaction(transaction);
     }

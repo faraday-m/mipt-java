@@ -10,7 +10,7 @@ public class AccountTest {
 
     @Test
     public void withdrawTest() {
-        Account account = new Account(1);
+        DebitCard account = new DebitCard(1);
         double startAmount = 20;
         double withdrawAmount = 10;
         account.add(startAmount);
@@ -27,7 +27,7 @@ public class AccountTest {
 
     @Test
     public void addTest() {
-        Account account = new Account(1);
+        DebitCard account = new DebitCard(1);
         double balance = account.getBalance();
         double negativeAmount = -1;
         assertFalse(account.add(negativeAmount));

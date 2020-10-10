@@ -1,9 +1,8 @@
 package edu.phystech;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class Transaction {
+public class Transaction implements BankEntity {
     private static long id_sequence = 0;
 
     private final long id;
@@ -87,5 +86,9 @@ public class Transaction {
         return transaction;
     }
 
+    @Override
+    public EntityKey getKey() {
+        return new SimpleEntityKey(EntityKey.EntityType.TRANSACTION, id);
+    }
 }
 

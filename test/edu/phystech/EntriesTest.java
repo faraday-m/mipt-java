@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.*;
 
@@ -26,6 +27,7 @@ public class EntriesTest {
         Entries entries = new Entries(generateEntries());
         LocalDate lowDate = LocalDate.of(1990,01,01);
         Collection<Entry> entriesFrom = entries.from(lowDate);
+        System.out.println(entriesFrom.stream().map(entry -> entry.getTime()).collect(Collectors.toList()));
         for (Entry e : entriesFrom) {
             assertFalse(e.getTime().isBefore(LocalDateTime.of(lowDate, LocalTime.of(0,0))));
         }
