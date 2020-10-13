@@ -7,37 +7,36 @@ import java.util.List;
 import java.util.Map;
 
 public class CsvReportGenerator<T> extends AbstractReportGenerator<T> {
+    Class clazz;
+
+    public CsvReportGenerator(Class clazz) {
+        this.clazz = clazz;
+    }
 
     @Override
     public Report generate(List<T> entities) {
         StringBuilder sb = new StringBuilder();
-        Class clazz = null;
         try {
-            if (entities.size() > 0) {
-                clazz = entities.get(0).getClass();
-                List<String> keys = getKeyValues(clazz);
-                for (int i = 0; i < entities.size(); i++) {
-                    Map<String, String> fieldMap = generateFieldMap(entities.get(i));
-                    if (i == 0) {
-                        for (int j = 0; j < keys.size(); j++) {
-                            sb.append(keys.get(j));
-                            if (j < keys.size() - 1) {
-                                sb.append(",");
-                            }
-                        }
-                    }
-                    sb.append("\n");
+            List<String> keys = getKeyValues(clazz);
+            for (int i = 0; i < entities.size(); i++) {
+                Map<String, String> fieldMap = generateFieldMap(clazz, entities.get(i));
+                if (i == 0) {
                     for (int j = 0; j < keys.size(); j++) {
-                        sb.append(fieldMap.get(keys.get(j)));
+                        sb.append(keys.get(j));
                         if (j < keys.size() - 1) {
                             sb.append(",");
                         }
                     }
                 }
-                return new StringReport(sb.toString());
-            } else {
-                throw new InvalidArgumentException((String[]) (Collections.singletonList("entities").toArray()));
+                sb.append("\n");
+                for (int j = 0; j < keys.size(); j++) {
+                    sb.append(fieldMap.get(keys.get(j)));
+                    if (j < keys.size() - 1) {
+                        sb.append(",");
+                    }
+                }
             }
+            return new StringReport(sb.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

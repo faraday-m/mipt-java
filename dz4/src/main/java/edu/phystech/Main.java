@@ -10,7 +10,7 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        ReportGenerator<SimpleEntity> generator = new CsvReportGenerator<>();
+        ReportGenerator<SimpleEntity> generator = new CsvReportGenerator<>(SimpleEntity.class);
         List<SimpleEntity> objects = new ArrayList<>();
         List<String> petyaHobbies = new ArrayList<>();
         petyaHobbies.add("C#");
@@ -25,7 +25,7 @@ public class Main {
                 20));
         Report report = generator.generate(objects);
 
-        ReportGenerator<SimpleEntity> excelGenerator = new ExcelReportGenerator<>();
+        ReportGenerator<SimpleEntity> excelGenerator = new ExcelReportGenerator<>(SimpleEntity.class);
         Report excelReport = excelGenerator.generate(objects);
         report.writeTo(System.out);
         try {

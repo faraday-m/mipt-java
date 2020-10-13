@@ -10,10 +10,9 @@ public abstract class AbstractReportGenerator<T> implements ReportGenerator<T> {
     @Override
     public abstract Report generate(List<T> entities);
 
-    protected Map<String, String> generateFieldMap(T entity) {
+    protected Map<String, String> generateFieldMap(Class clazz, T entity) {
         try {
             Map<String, String> fieldMap = new LinkedHashMap<>();
-            Class clazz = entity.getClass();
             Field[] fields = clazz.getDeclaredFields();
             for (Field f : fields) {
                 boolean access = f.isAccessible();
@@ -22,7 +21,10 @@ public abstract class AbstractReportGenerator<T> implements ReportGenerator<T> {
                 if (f.isAnnotationPresent(AlternativeName.class)) {
                     name = f.getAnnotation(AlternativeName.class).value();
                 }
-                String value = f.get(entity).toString();
+                String value = "";
+                if (f.get(entity) != null) {
+                    value = f.get(entity).toString();
+                }
                 fieldMap.put(name, value);
                 f.setAccessible(access);
             }
