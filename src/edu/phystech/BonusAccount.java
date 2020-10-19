@@ -1,6 +1,7 @@
 package edu.phystech;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 public class BonusAccount implements Account {
     private static long sequenceId = -1;
@@ -51,6 +52,10 @@ public class BonusAccount implements Account {
         }
         changeBalance(-amount);
         return false;
+    }
+
+    public Collection<Entry> history(LocalDate from, LocalDate to) {
+        return entries.betweenDates(from,to);
     }
 
     public double getBalance() {
