@@ -22,7 +22,7 @@ public class Customer {
             account = new Account(accountId);
             return true;
         }
-        System.out.println("Customer " + this.fullName() + " already has the active account");
+        System.out.printf("Customer %s already has the active account\n", this.fullName());
         return false;
     }
 
@@ -33,7 +33,7 @@ public class Customer {
      */
     public boolean closeAccount() {
         if (account == null) {
-            System.out.println("Customer " + this.fullName() + " has no active account to close");
+            System.out.printf("Customer %s has no active account to close\n", this.fullName());
             return false;
         }
         account = null;
@@ -55,7 +55,7 @@ public class Customer {
      */
     public boolean withdrawFromCurrentAccount(double amount) {
         if (account == null) {
-            System.out.println("Customer " + this.fullName() + " has no active account");
+            System.out.printf("Customer %s has no active account\n", this.fullName());
             return false;
         }
         return account.withdraw(amount);
@@ -68,7 +68,7 @@ public class Customer {
      */
     public boolean addMoneyToCurrentAccount(double amount) {
         if (account == null) {
-            System.out.println("Customer " + this.fullName() + " has no active account");
+            System.out.printf("Customer %s has no active account\n", this.fullName());
             return false;
         }
         return account.add(amount);
