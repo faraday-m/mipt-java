@@ -1,13 +1,17 @@
 package edu.phystech;
 
+import edu.phystech.transactions.TransactionManager;
+
 public class Customer {
     private final String name;
     private final String lastName;
     private Account account;
+    private TransactionManager transactionManager;
 
-    public Customer(String name, String lastName) {
+    public Customer(String name, String lastName, TransactionManager transactionManager) {
         this.name = name;
         this.lastName = lastName;
+        this.transactionManager = transactionManager;
     }
 
     /**
@@ -19,7 +23,7 @@ public class Customer {
      */
     public boolean openAccount(long accountId) {
         if (account == null) {
-            account = new Account(accountId);
+            account = new Account(accountId, transactionManager);
             return true;
         }
         System.out.printf("Customer %s already has the active account\n", this.fullName());
@@ -58,7 +62,7 @@ public class Customer {
             System.out.printf("Customer %s has no active account\n", this.fullName());
             return false;
         }
-        return account.withdraw(amount);
+        return account.withdrawCash(amount);
     }
 
     /**
@@ -71,7 +75,7 @@ public class Customer {
             System.out.printf("Customer %s has no active account\n", this.fullName());
             return false;
         }
-        return account.add(amount);
+        return account.addCash(amount);
     }
 }
 

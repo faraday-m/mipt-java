@@ -1,10 +1,19 @@
 package edu.phystech;
 
+import edu.phystech.transactions.TransactionManager;
+import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.TestCase.*;
 
 public class CustomerTest {
+    private TransactionManager transactionManager;
+
+    @Before
+    public void init() {
+        transactionManager = new TransactionManager();
+    }
+
     @Test
     public void setName_nameAndSurnameEqualsToConcatenated_WhenCustomerCreated() {
         //given
@@ -12,7 +21,7 @@ public class CustomerTest {
         String lastName = "Doe";
         String fullName = "John Doe";
         //when
-        Customer customer = new Customer(name, lastName);
+        Customer customer = new Customer(name, lastName, transactionManager);
         //then
         assertEquals(customer.fullName(), fullName);
     }
@@ -20,7 +29,7 @@ public class CustomerTest {
     @Test
     public void openAccount_returnsTrue_WhenOpeningFirstAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         //when
         boolean gotFirstAccount = customer.openAccount(135);
         //then
@@ -30,7 +39,7 @@ public class CustomerTest {
     @Test
     public void openAccount_returnsFalse_WhenOpeningSecondAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         customer.openAccount(123);
         //when
         boolean gotSecondAccount = customer.openAccount(135);
@@ -41,7 +50,7 @@ public class CustomerTest {
     @Test
     public void closeAccount_returnsTrue_WhenCloseExistingAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         customer.openAccount(123);
         //when
         boolean hasClosedAccount = customer.closeAccount();
@@ -52,7 +61,7 @@ public class CustomerTest {
     @Test
     public void closeAccount_returnsFalse_WhenCloseNonExistingAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         //when
         boolean hasClosedAccount = customer.closeAccount();
         //then
@@ -63,7 +72,7 @@ public class CustomerTest {
     @Test
     public void closeAccount_returnsFalse_WhenCloseAlreadyClosedAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         customer.openAccount(123);
         //when
         customer.closeAccount();
@@ -75,7 +84,7 @@ public class CustomerTest {
     @Test
     public void addMoney_returnsFalse_whenAddToNonExistingAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         double positiveMoney = 10;
         //when
         boolean gotMoney = customer.addMoneyToCurrentAccount(positiveMoney);
@@ -86,7 +95,7 @@ public class CustomerTest {
     @Test
     public void addMoney_returnsTrue_whenAddPositiveNumberToExistingAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         double positiveMoney = 10;
         customer.openAccount(123);
         //when
@@ -98,7 +107,7 @@ public class CustomerTest {
     @Test
     public void addMoney_returnsFalse_whenAddNegativeNumberToExistingAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         double negativeMoney = -10;
         customer.openAccount(123);
         //when
@@ -110,7 +119,7 @@ public class CustomerTest {
     @Test
     public void withdrawMoney_returnsFalse_whenWithdrawFromNonExistingAccount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         double positiveMoney = 10;
         //when
         boolean withdrawedMoney = customer.withdrawFromCurrentAccount(positiveMoney);
@@ -121,7 +130,7 @@ public class CustomerTest {
     @Test
     public void withdrawMoney_returnsTrue_whenWithdrawFromExistingAccountLessThanBalance() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         double positiveMoney = 10;
         double deposit = 15;
         customer.openAccount(123);
@@ -136,7 +145,7 @@ public class CustomerTest {
     @Test
     public void withdrawMoney_returnsFalse_whenWithdrawFromExistingAccountGreaterThanBalance() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         double positiveMoney = 10;
         double deposit = 5;
         customer.openAccount(123);
@@ -151,7 +160,7 @@ public class CustomerTest {
     @Test
     public void withdrawMoney_returnsFalse_whenWithdrawNegativeAmount() {
         //given
-        Customer customer = new Customer("John", "Doe");
+        Customer customer = new Customer("John", "Doe", transactionManager);
         double negativeMoney = -1;
         double deposit = 5;
         customer.openAccount(123);

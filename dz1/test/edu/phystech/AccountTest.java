@@ -1,5 +1,6 @@
 package edu.phystech;
 
+import edu.phystech.transactions.TransactionManager;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -8,81 +9,88 @@ import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class AccountTest {
+    private TransactionManager transactionManager;
+
+    @Before
+    public void init() {
+        transactionManager = new TransactionManager();
+    }
+
     @Test
-    public void withdrawMoney_returnsTrue_whenAmountLessThanBalance() {
+    public void withdrawCashMoney_returnsTrue_whenAmountLessThanBalance() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double startAmount = 20;
-        account.add(startAmount);
+        account.addCash(startAmount);
         //when
         double withdrawAmount = 10;
-        boolean isSuccess = account.withdraw(withdrawAmount);
+        boolean isSuccess = account.withdrawCash(withdrawAmount);
         //then
         assertTrue(isSuccess);
     }
 
     @Test
-    public void withdrawMoney_returnsFalse_whenAmountLessThanZero() {
+    public void withdrawCashMoney_returnsFalse_whenAmountLessThanZero() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double startAmount = 20;
-        account.add(startAmount);
+        account.addCash(startAmount);
         //when
         double withdrawAmount = -1;
-        boolean isSuccess = account.withdraw(withdrawAmount);
+        boolean isSuccess = account.withdrawCash(withdrawAmount);
         //then
         assertFalse(isSuccess);
     }
 
     @Test
-    public void withdrawMoney_returnsFalse_whenAmountGreaterThanBalance() {
+    public void withdrawCashMoney_returnsFalse_whenAmountGreaterThanBalance() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double startAmount = 20;
-        account.add(startAmount);
+        account.addCash(startAmount);
         //when
         double withdrawAmount = 30;
-        boolean isSuccess = account.withdraw(withdrawAmount);
+        boolean isSuccess = account.withdrawCash(withdrawAmount);
         //then
         assertFalse(isSuccess);
     }
 
     @Test
-    public void withdrawMoney_balanceChanged_whenAmountLessThanBalance() {
+    public void withdrawCashMoney_balanceChanged_whenAmountLessThanBalance() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double startAmount = 20;
-        account.add(startAmount);
+        account.addCash(startAmount);
         //when
         double withdrawAmount = 10;
-        account.withdraw(withdrawAmount);
+        account.withdrawCash(withdrawAmount);
         //then
         assertEquals(startAmount - withdrawAmount, account.getBalance());
     }
 
 
     @Test
-    public void withdrawMoney_balanceNotChanged_whenAmountLessThanZero() {
+    public void withdrawCashMoney_balanceNotChanged_whenAmountLessThanZero() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double startAmount = 20;
-        account.add(startAmount);
+        account.addCash(startAmount);
         //when
         double withdrawAmount = -1;
-        account.withdraw(withdrawAmount);
+        account.withdrawCash(withdrawAmount);
         //then
         assertEquals(startAmount, account.getBalance());
     }
 
     @Test
-    public void withdrawMoney_balanceNotChanged_whenAmountGreaterThanBalance() {
+    public void withdrawCashMoney_balanceNotChanged_whenAmountGreaterThanBalance() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double startAmount = 20;
-        account.add(startAmount);
+        account.addCash(startAmount);
         //when
         double withdrawAmount = 30;
-        account.withdraw(withdrawAmount);
+        account.withdrawCash(withdrawAmount);
         //then
         assertEquals(startAmount, account.getBalance());
     }
@@ -90,56 +98,56 @@ public class AccountTest {
     @Test
     public void getBalance_BalanceEqualsAmount_WhenCalledInitialAdd() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double startAmount = 20;
         //when
-        account.add(startAmount);
+        account.addCash(startAmount);
         //then
         assertEquals(startAmount, account.getBalance());
     }
 
     @Test
-    public void addMoney_returnsFalse_whenAmountLessThanZero() {
+    public void addCashMoney_returnsFalse_whenAmountLessThanZero() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         //when
         double negativeAmount = -1;
-        boolean isSuccess = account.add(negativeAmount);
+        boolean isSuccess = account.addCash(negativeAmount);
         //then
         assertFalse(isSuccess);
     }
 
     @Test
-    public void addMoney_balanceNotChanged_whenAmountLessThanZero() {
+    public void addCashMoney_balanceNotChanged_whenAmountLessThanZero() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double balance = account.getBalance();
         //when
         double negativeAmount = -1;
-        account.add(negativeAmount);
+        account.addCash(negativeAmount);
         //then
         assertEquals(balance, account.getBalance());
     }
 
     @Test
-    public void addMoney_returnsTrue_whenAmountGreaterThenZero() {
+    public void addCashMoney_returnsTrue_whenAmountGreaterThenZero() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         //when
         double positiveAmount = 10;
-        boolean isSuccess = account.add(positiveAmount);
+        boolean isSuccess = account.addCash(positiveAmount);
         //then
         assertTrue(isSuccess);
     }
 
     @Test
-    public void addMoney_balanceChanged_whenAmountGreaterThanZero() {
+    public void addCashMoney_balanceChanged_whenAmountGreaterThanZero() {
         //given
-        Account account = new Account(1);
+        Account account = new Account(1, transactionManager);
         double balance = account.getBalance();
         //when
         double positiveAmount = 10;
-        account.add(positiveAmount);
+        account.addCash(positiveAmount);
         //then
         assertEquals(balance + positiveAmount, account.getBalance());
     }
