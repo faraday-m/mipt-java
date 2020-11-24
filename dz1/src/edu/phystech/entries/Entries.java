@@ -33,7 +33,10 @@ public class Entries {
     }
 
     public Entry last() {
-        return entries.last();
+        if (!entries.isEmpty()) {
+            return entries.last();
+        }
+        return null;
     }
 }
 

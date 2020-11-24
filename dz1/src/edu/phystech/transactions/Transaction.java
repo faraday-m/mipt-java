@@ -1,7 +1,6 @@
 package edu.phystech.transactions;
 
 import edu.phystech.Account;
-import edu.phystech.entries.Entry;
 
 public class Transaction implements Comparable {
     private final long id;
@@ -36,6 +35,10 @@ public class Transaction implements Comparable {
         return rolledBack;
     }
 
+    public boolean isExecuted() {
+        return executed;
+    }
+
     /**
      * Adding entries to both accounts
      * @throws IllegalStateException when was already executed
@@ -62,6 +65,9 @@ public class Transaction implements Comparable {
         if (this.rolledBack) {
             throw new IllegalStateException("Transaction is already rolled back");
         }
+        if (!this.executed) {
+            throw new IllegalStateException("Transaction was not executed");
+        }
         this.rolledBack = true;
         if (this.originator != null) {
             this.originator.addEntry(this);
@@ -81,7 +87,13 @@ public class Transaction implements Comparable {
             throw new ClassCastException(o.getClass().toString());
         } else {
             Transaction other = (Transaction) o;
-            return Double.compare(this.amount, other.amount);
+            int cmp = Double.compare(this.amount, other.amount);
+            if (cmp != 0) {
+                return cmp;
+            }
+            else {
+                return Integer.compare(hashCode(), other.hashCode());
+            }
         }
     }
 }

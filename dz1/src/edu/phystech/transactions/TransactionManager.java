@@ -8,7 +8,7 @@ import java.util.*;
  * Manages all transactions within the application
  */
 public class TransactionManager {
-    private Map<Account, SortedSet<Transaction>> transactionMap;
+    private Map<Account, NavigableSet<Transaction>> transactionMap;
     private int id_sequence;
 
     public TransactionManager() {

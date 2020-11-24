@@ -19,6 +19,7 @@ public class AnalyticsManager {
         Collection<Transaction> transactions = transactionManager.findAllTransactionsByAccount(account);
         return transactions.stream()
                 .map(Transaction::getBeneficiary)
+                .filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet()
                 .stream()
@@ -28,8 +29,8 @@ public class AnalyticsManager {
     }
 
     public Collection<Transaction> topTenExpensivePurchases(Account account) {
-        SortedSet<Transaction> transactions = (SortedSet<Transaction>) transactionManager.findAllTransactionsByAccount(account);
-        return transactions.stream().limit(10).collect(Collectors.toSet());
+        NavigableSet<Transaction> transactions = (NavigableSet<Transaction>) transactionManager.findAllTransactionsByAccount(account);
+        return transactions.descendingSet().stream().limit(10).collect(Collectors.toSet());
     }
 }
 

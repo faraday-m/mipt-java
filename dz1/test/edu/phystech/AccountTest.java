@@ -151,4 +151,60 @@ public class AccountTest {
         //then
         assertEquals(balance + positiveAmount, account.getBalance());
     }
+
+    @Test
+    public void withdrawMoneyFromAccount_balanceOfOriginatorDecreased_whenAmountGreaterThanZero() {
+        //given
+        Account account = new Account(1, transactionManager);
+        Account account2 = new Account(2, transactionManager);
+        double positiveAmount = 10;
+        account.addCash(positiveAmount);
+        double balance = account.getBalance();
+        //when
+        account.withdraw(positiveAmount, account2);
+        //then
+        assertEquals(balance - positiveAmount, account.getBalance());
+    }
+
+    @Test
+    public void withdrawMoneyFromAccount_balanceOfBeneficiaryIncreased_whenAmountGreaterThanZero() {
+        //given
+        Account account = new Account(1, transactionManager);
+        Account account2 = new Account(2, transactionManager);
+        double balance = account2.getBalance();
+        double positiveAmount = 10;
+        account.addCash(positiveAmount);
+        //when
+        account.withdraw(positiveAmount, account2);
+        //then
+        assertEquals(balance + positiveAmount, account2.getBalance());
+    }
+
+    @Test
+    public void addMoneyToAccount_balanceOfOriginatorDecreased_whenAmountGreaterThanZero() {
+        //given
+        Account account = new Account(1, transactionManager);
+        Account account2 = new Account(2, transactionManager);
+        double positiveAmount = 10;
+        account.addCash(positiveAmount);
+        double balance = account.getBalance();
+        //when
+        account2.add(positiveAmount, account);
+        //then
+        assertEquals(balance - positiveAmount, account.getBalance());
+    }
+
+    @Test
+    public void addMoneyToAccount_balanceOfBeneficiaryIncreased_whenAmountGreaterThanZero() {
+        //given
+        Account account = new Account(1, transactionManager);
+        Account account2 = new Account(2, transactionManager);
+        double balance = account2.getBalance();
+        double positiveAmount = 10;
+        account.addCash(positiveAmount);
+        //when
+        account2.add(positiveAmount, account);
+        //then
+        assertEquals(balance + positiveAmount, account2.getBalance());
+    }
 }

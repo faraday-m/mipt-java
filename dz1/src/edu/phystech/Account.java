@@ -21,18 +21,30 @@ public class Account {
         this.entries = new Entries();
     }
 
+    public long getId() {
+        return id;
+    }
+
     public void addEntry(Transaction transaction) {
+        LocalDateTime dateTime = LocalDateTime.now();
+        if (entries.last() != null && !dateTime.isAfter(entries.last().getTime())) {
+            dateTime = entries.last().getTime().plusNanos(1L);
+        }
         if (!transaction.isRolledBack()) {
             if (this.equals(transaction.getOriginator())) {
-                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, -transaction.getAmount(), LocalDateTime.now()));
+                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, -transaction.getAmount(), dateTime));
+                balance -= transaction.getAmount();
             } else if (this.equals(transaction.getBeneficiary())) {
-                entries.addEntry(new Entry(transaction.getOriginator(), transaction, transaction.getAmount(), LocalDateTime.now()));
+                entries.addEntry(new Entry(transaction.getOriginator(), transaction, transaction.getAmount(), dateTime));
+                balance += transaction.getAmount();
             }
         } else {
             if (this.equals(transaction.getOriginator())) {
-                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, transaction.getAmount(), LocalDateTime.now()));
+                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, transaction.getAmount(), dateTime));
+                balance += transaction.getAmount();
             } else if (this.equals(transaction.getBeneficiary())) {
-                entries.addEntry(new Entry(transaction.getOriginator(), transaction, -transaction.getAmount(), LocalDateTime.now()));
+                entries.addEntry(new Entry(transaction.getOriginator(), transaction, -transaction.getAmount(), dateTime));
+                balance -= transaction.getAmount();
             }
         }
     }
@@ -51,7 +63,6 @@ public class Account {
         } else {
             Transaction transaction = transactionManager.createTransaction(amount, this, beneficiary);
             transactionManager.executeTransaction(transaction);
-            balance -= transaction.getAmount();
             return true;
         }
     }
@@ -94,7 +105,6 @@ public class Account {
         } else {
             Transaction transaction = transactionManager.createTransaction(amount, originator, this);
             transactionManager.executeTransaction(transaction);
-            balance += transaction.getAmount();
             return true;
         }
     }
@@ -111,6 +121,10 @@ public class Account {
      */
     public double balanceOn(LocalDate date) {
         return entries.betweenDates(LocalDate.MIN, date).stream().map(Entry::getAmount).reduce(0.0, Double::sum);
+    }
+
+    public Entry lastEntry() {
+        return entries.last();
     }
 
     public double getBalance() {
