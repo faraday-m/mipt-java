@@ -1,34 +1,32 @@
 package edu.phystech;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class AnalyticsManager {
+    private final TransactionManager transactionManager;
+
+    public AnalyticsManager(TransactionManager transactionManager) {
+        this.transactionManager = transactionManager;
+    }
 
     public Account mostFrequentBeneficiaryOfAccount(Account account) {
-        Account maxBeneficiary = null;
-        int numOfTransactions = 0;
-        for (Account acc : account.getBeneficiaries().keySet()) {
-            if (account.getBeneficiaries().get(acc).size() > numOfTransactions) {
-                numOfTransactions = account.getBeneficiaries().get(acc).size();
-                maxBeneficiary = acc;
-            }
-        }
-        return maxBeneficiary;
+        Collection<Transaction> transactions = transactionManager.findAllTransactionsByAccount(account);
+        return transactions.stream()
+                .map(Transaction::getBeneficiary)
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
+                .orElse(new AbstractMap.SimpleEntry<>(null,0L))
+                .getKey();
     }
 
     public Collection<Transaction> topTenExpensivePurchases(Account account) {
-        List<Transaction> sortedTransactions = new ArrayList<>(account.getPurchases());
-        sortedTransactions.sort(new Comparator<Transaction>() {
-            @Override
-            public int compare(Transaction o1, Transaction o2) {
-                return Double.compare(o1.getAmount(), o2.getAmount());
-            }
-        });
-        if (sortedTransactions.size() < 10) {
-            return sortedTransactions;
-        }
-        return  sortedTransactions.subList(0,10);
+        NavigableSet<Transaction> transactions = (NavigableSet<Transaction>) transactionManager.findAllTransactionsByAccount(account);
+        return transactions.descendingSet().stream().limit(10).collect(Collectors.toSet());
     }
 }
 

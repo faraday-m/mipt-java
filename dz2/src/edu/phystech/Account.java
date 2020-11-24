@@ -2,31 +2,46 @@ package edu.phystech;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
 
 public class Account {
     private final long id;
+    private final TransactionManager transactionManager;
     private final Entries entries;
     private double balance;
 
-    public Account(long id) {
+    public Account(long id, TransactionManager transactionManager) {
         this.id = id;
-        this.entries = new Entries(this);
-        this.balance = 0;
+        this.transactionManager = transactionManager;
+        this.entries = new Entries();
     }
 
-
-    public Transaction getTransaction(long id) {
-        return TransactionManager.getTransaction(this, id);
+    public long getId() {
+        return id;
     }
 
-    public void addEntry(Entry entry) {
-        entries.addEntry(entry);
-    }
-
-    private void changeBalance(double amount) {
-        balance += amount;
+    public void addEntry(Transaction transaction) {
+        LocalDateTime dateTime = LocalDateTime.now();
+        if (entries.last() != null && !dateTime.isAfter(entries.last().getTime())) {
+            dateTime = entries.last().getTime().plusNanos(1L);
+        }
+        if (!transaction.isRolledBack()) {
+            if (this.equals(transaction.getOriginator())) {
+                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, -transaction.getAmount(), dateTime));
+                balance -= transaction.getAmount();
+            } else if (this.equals(transaction.getBeneficiary())) {
+                entries.addEntry(new Entry(transaction.getOriginator(), transaction, transaction.getAmount(), dateTime));
+                balance += transaction.getAmount();
+            }
+        } else {
+            if (this.equals(transaction.getOriginator())) {
+                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, transaction.getAmount(), dateTime));
+                balance += transaction.getAmount();
+            } else if (this.equals(transaction.getBeneficiary())) {
+                entries.addEntry(new Entry(transaction.getOriginator(), transaction, -transaction.getAmount(), dateTime));
+                balance -= transaction.getAmount();
+            }
+        }
     }
 
     /**
@@ -37,14 +52,14 @@ public class Account {
      * if amount &gt 0 and (currentBalance - amount) &ge 0,
      * otherwise returns false
      */
-    public boolean withdraw(double amount) {
-
-        if ((amount > 0) && ((getBalance() - amount) >= 0)) {
-            changeBalance(-amount);
+    public boolean withdraw(double amount, Account beneficiary) {
+        if (amount <= 0 || amount > getBalance()) {
+            return false;
+        } else {
+            Transaction transaction = transactionManager.createTransaction(amount, this, beneficiary);
+            transactionManager.executeTransaction(transaction);
             return true;
         }
-        changeBalance(-amount);
-        return false;
     }
 
     /**
@@ -56,12 +71,7 @@ public class Account {
      * otherwise returns false
      */
     public boolean withdrawCash(double amount) {
-        if ((amount > 0) && ((getBalance() - amount) >= 0)) {
-            changeBalance(-amount);
-            return true;
-        }
-        changeBalance(-amount);
-        return false;
+        return withdraw(amount, null);
     }
 
     /**
@@ -73,12 +83,7 @@ public class Account {
      * otherwise returns false
      */
     public boolean addCash(double amount) {
-        if (amount > 0) {
-            changeBalance(amount);
-            return true;
-        }
-        changeBalance(amount);
-        return false;
+        return add(amount, null);
     }
 
     /**
@@ -89,17 +94,19 @@ public class Account {
      * if amount &gt 0,
      * otherwise returns false
      */
-    public boolean add(double amount) {
-        if (amount > 0) {
-            changeBalance(amount);
+    public boolean add(double amount, Account originator) {
+        if (amount <= 0) {
+            return false;
+        } else {
+            Transaction transaction = transactionManager.createTransaction(amount, originator, this);
+            transactionManager.executeTransaction(transaction);
             return true;
         }
-        changeBalance(amount);
-        return false;
     }
 
+
     public Collection<Entry> history(LocalDate from, LocalDate to) {
-        return entries.betweenDates(from,to);
+        return entries.betweenDates(from, to);
     }
 
     /**
@@ -108,29 +115,21 @@ public class Account {
      * @return balance
      */
     public double balanceOn(LocalDate date) {
-        double balance = 0;
-        for ( Entry e: entries.to(date)) {
-            balance += e.getAmount();
-        }
-        return balance;
+        return entries.betweenDates(LocalDate.MIN, date).stream().map(Entry::getAmount).reduce(0.0, Double::sum);
     }
 
-    /**
-     * Finds the last transaction of the account and rollbacks it
-     */
-    public Transaction rollbackLastTransaction() {
-        return TransactionManager.rollbackTransaction(entries.last().getTransaction(this));
+    public Entry lastEntry() {
+        return entries.last();
     }
 
     public double getBalance() {
         return balance;
     }
 
-    public Map<Account, Collection<Entry>> getBeneficiaries() {
-        return entries.entriesByBeneficiaries();
-    }
-
-    public Collection<Transaction> getPurchases() {
-        return entries.getOutcomes().stream().map(e -> e.getTransaction(this)).collect(Collectors.toList());
+    /**
+     * Finds the last transaction of the account and rollbacks it
+     */
+    public void rollbackLastTransaction() {
+        transactionManager.rollbackTransaction(entries.last().getTransaction());
     }
 }
