@@ -10,11 +10,21 @@ public class DebitCard implements Account, BankEntity {
     private final TransactionManager transactionManager;
     private final Entries entries;
     private double balance;
+    private BonusAccount bonusAccount;
 
     public DebitCard(long id, TransactionManager transactionManager) {
         this.id = id;
         this.transactionManager = transactionManager;
         this.entries = new Entries();
+        this.bonusAccount = null;
+    }
+
+
+    public DebitCard(long id, TransactionManager transactionManager, double cashbackQuotient) {
+        this.id = id;
+        this.transactionManager = transactionManager;
+        this.entries = new Entries();
+        this.bonusAccount = new BonusAccount(-id, cashbackQuotient);
     }
 
     public long getId() {
@@ -30,6 +40,10 @@ public class DebitCard implements Account, BankEntity {
             if (this.equals(transaction.getOriginator())) {
                 entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, -transaction.getAmount(), dateTime));
                 balance -= transaction.getAmount();
+                if (bonusAccount != null) {
+                    Transaction cashbackTransaction = bonusAccount.getTransactionManager().createTransaction(transaction.getAmount() * bonusAccount.getCashbackQuotient(), bonusAccount, null);
+                    bonusAccount.getTransactionManager().executeTransaction(cashbackTransaction);
+                }
             } else if (this.equals(transaction.getBeneficiary())) {
                 entries.addEntry(new Entry(transaction.getOriginator(), transaction, transaction.getAmount(), dateTime));
                 balance += transaction.getAmount();
@@ -38,6 +52,10 @@ public class DebitCard implements Account, BankEntity {
             if (this.equals(transaction.getOriginator())) {
                 entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, transaction.getAmount(), dateTime));
                 balance += transaction.getAmount();
+                if (bonusAccount != null) {
+                    Transaction cashbackTransaction = bonusAccount.getTransactionManager().createTransaction(-transaction.getAmount() * bonusAccount.getCashbackQuotient(), null, bonusAccount);
+                    bonusAccount.getTransactionManager().executeTransaction(cashbackTransaction);
+                }
             } else if (this.equals(transaction.getBeneficiary())) {
                 entries.addEntry(new Entry(transaction.getOriginator(), transaction, -transaction.getAmount(), dateTime));
                 balance -= transaction.getAmount();

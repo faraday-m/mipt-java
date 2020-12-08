@@ -3,7 +3,7 @@ package edu.phystech;
 public class Customer {
     private final String name;
     private final String lastName;
-    private Account account;
+    private DebitCard account;
     private TransactionManager transactionManager;
 
     public Customer(String name, String lastName, TransactionManager transactionManager) {
