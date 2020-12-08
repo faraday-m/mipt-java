@@ -6,73 +6,50 @@ import java.util.*;
  * Manages all transactions within the application
  */
 public class TransactionManager {
-    public static class TransactionBuilder {
-        private double amount;
-        private Account originator;
-        private Account beneficiary;
+    private Map<Account, NavigableSet<Transaction>> transactionMap;
+    private int id_sequence;
 
-
-        public TransactionBuilder withAmount(double amount) {
-            this.amount = amount;
-            return this;
-        }
-
-        public TransactionBuilder withOriginator(Account originator) {
-            this.originator = originator;
-            return this;
-        }
-
-        public TransactionBuilder withBeneficiary(Account beneficiary) {
-            this.beneficiary = beneficiary;
-            return this;
-        }
-
-        public Transaction build() {
-            return new Transaction(amount, originator, beneficiary);
-        }
+    public TransactionManager() {
+        this.transactionMap = new LinkedHashMap<>();
+        id_sequence = 0;
     }
 
-    private static SimpleEntitiesStorage<Transaction> transactions = new SimpleEntitiesStorage<Transaction>((Object t) -> ((Transaction) t).getOriginator()); //Map<Account, Map<Long, Transaction>> transactions = new LinkedHashMap<>();
     /**
      * Creates and stores transactions
+     *
      * @param amount
      * @param originator
      * @param beneficiary
      * @return created Transaction
      */
-    public static Transaction createTransaction(double amount,
+    public Transaction createTransaction(double amount,
                                          Account originator,
                                          Account beneficiary) {
-        TransactionBuilder transactionBuilder = new TransactionBuilder()
-                .withAmount(amount)
-                .withOriginator(originator)
-                .withBeneficiary(beneficiary);
-        return transactionBuilder.build();
+        Transaction transaction = new Transaction(++id_sequence, amount, originator, beneficiary, false, false);
+        if (!transactionMap.containsKey(originator)) {
+            transactionMap.put(originator, new TreeSet<>());
+        }
+        transactionMap.get(originator).add(transaction);
+        return transaction;
     }
 
-    public static Transaction getTransaction(Account account, long id) {
-        return transactions.findByKey(account).stream().filter((Transaction t) -> (t.getId() == id)).findFirst().get();
+    public Collection<Transaction> findAllTransactionsByAccount(Account account) {
+        if (!transactionMap.containsKey(account)) {
+            transactionMap.put(account, new TreeSet<>());
+        }
+        return transactionMap.get(account);
     }
 
-    public static Collection<Transaction> findAllTransactionsByAccount(Account account) {
-        return transactions.findByKey(account);
+    public void rollbackTransaction(Transaction transaction) {
+        if (transaction != null) {
+            transaction.rollback();
+        }
     }
 
-    public static Transaction rollbackTransaction(Transaction transaction) {
-        Transaction rolledTransaction = transaction.rollback();
-        addTransactionToMap(rolledTransaction.getOriginator(), rolledTransaction);
-        return rolledTransaction;
+    public void executeTransaction(Transaction transaction) {
+        if (transaction != null) {
+            transaction.execute();
+        }
     }
-
-    public static Transaction executeTransaction(Transaction transaction) {
-        Transaction executedTransacton = transaction.execute();
-        addTransactionToMap(executedTransacton.getOriginator(), executedTransacton);
-        return executedTransacton;
-    }
-
-    private static void addTransactionToMap(Account account, Transaction transaction) {
-        transactions.save(transaction);
-    }
-
 }
 

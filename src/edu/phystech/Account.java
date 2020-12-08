@@ -2,11 +2,9 @@ package edu.phystech;
 
 import java.time.LocalDate;
 
-public interface Account extends BankEntity {
-    void addEntry(Entry entry);
-
+public interface Account {
+    void addEntry(Transaction transaction);
     double balanceOn(LocalDate date);
-
-    boolean add(double amount);
-    boolean withdraw(double amount);
+    boolean addCash(double amount);
+    boolean withdrawCash(double amount);
 }
