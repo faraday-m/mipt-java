@@ -34,12 +34,12 @@ public class AnalyticsManager {
         return accounts.stream().map(acc -> acc.balanceOn(LocalDate.now())).reduce(0.0, Double::sum);
     }
 
-    public Set<Long> uniqueKeysOf(List<Account> accounts, KeyExtractor<Long, Account> extractor) {
+    public Set<Long> uniqueKeysOf(List<Account> accounts, KeyExtractor<Long, ? super Account> extractor) {
         return accounts.stream().map(extractor::extract).collect(Collectors.toSet());
     }
 
     public List<Account> accountsRangeFrom(List<Account> accounts, Account minAccount, Comparator<? super Account> comparator) {
-        return accounts.stream().filter(acc -> comparator.compare(acc, minAccount) > 0).collect(Collectors.toList());
+        return accounts.stream().filter(acc -> comparator.compare(acc, minAccount) >= 0).collect(Collectors.toList());
     }
 
 }

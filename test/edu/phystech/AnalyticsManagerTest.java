@@ -3,11 +3,10 @@ package edu.phystech;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.time.LocalDate;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class AnalyticsManagerTest {
     private TransactionManager transactionManager;
@@ -104,5 +103,71 @@ public class AnalyticsManagerTest {
         Account beneficiary = analyticsManager.mostFrequentBeneficiaryOfAccount(originator);
         //then
         assertEquals(beneficiary, freqBeneficiary);
+    }
+
+    @Test
+    public void getOverallAccountBalance_returnsSumOfDebitAndBonusAccounts_whenCalled() {
+            //given
+            Account beneficiary = new DebitCard(1, transactionManager);
+            DebitCard originator = new DebitCard(2, transactionManager, 0.1);
+            Account bonusAccount = originator.getBonusAccount();
+            originator.addCash(10000);
+            originator.withdraw(1000, beneficiary);
+            List<Account> accounts = new ArrayList<>();
+            accounts.add(beneficiary);
+            accounts.add(originator);
+            accounts.add(bonusAccount);
+            //when
+            double overallBalance = analyticsManager.overallBalanceOfAccounts(accounts);
+            //then
+            assertEquals(10100, overallBalance, 0.0);
+    }
+
+    @Test
+    public void uniqueKeysOf_returnsSetOfKeys_whenCalled() {
+        //given
+        DebitCard beneficiary = new DebitCard(1, transactionManager, 0.1);
+        Account originator = new DebitCard(2, transactionManager);
+        Account bonusAccount = beneficiary.getBonusAccount();
+        List<Account> accounts = new ArrayList<>();
+        accounts.add(beneficiary);
+        accounts.add(originator);
+        accounts.add(bonusAccount);
+        //when
+        Set<Long> uniqueKeys = analyticsManager.uniqueKeysOf(accounts, new SimpleKeyExtractor());
+        //then
+        assertTrue(uniqueKeys.contains(1L));
+        assertTrue(uniqueKeys.contains(2L));
+        assertTrue(uniqueKeys.contains(-1L));
+    }
+
+
+    @Test
+    public void accountsRangeFrom_returnsAccsWithBalanceGreaterThen5000_whenCalledWithBalanceComparator() {
+        //given
+        DebitCard acc1 = new DebitCard(1, transactionManager);
+        DebitCard acc2 = new DebitCard(1, transactionManager);
+        DebitCard acc3 = new DebitCard(1, transactionManager);
+        DebitCard acc4 = new DebitCard(1, transactionManager);
+
+        acc1.addCash(10000);
+        acc2.addCash(8000);
+        acc3.addCash(2000);
+        acc4.addCash(5000);
+
+        List<Account> accounts = new ArrayList<>();
+        accounts.add(acc1);
+        accounts.add(acc2);
+        accounts.add(acc3);
+        accounts.add(acc4);
+        //when
+        List<Account> wealthiestAcccounts = analyticsManager.accountsRangeFrom(accounts,
+                acc4,
+                Comparator.comparingDouble(acc -> acc.balanceOn(LocalDate.now())));
+        //then
+        assertTrue(wealthiestAcccounts.contains(acc1));
+        assertTrue(wealthiestAcccounts.contains(acc2));
+        assertFalse(wealthiestAcccounts.contains(acc3));
+        assertTrue(wealthiestAcccounts.contains(acc4));
     }
 }

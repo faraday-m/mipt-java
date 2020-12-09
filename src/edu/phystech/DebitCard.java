@@ -1,5 +1,6 @@
 package edu.phystech;
 
+import java.security.InvalidParameterException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -10,7 +11,12 @@ public class DebitCard implements Account, BankEntity {
     private final TransactionManager transactionManager;
     private final Entries entries;
     private double balance;
-    private BonusAccount bonusAccount;
+
+    public BonusAccount getBonusAccount() {
+        return bonusAccount;
+    }
+
+    private final BonusAccount bonusAccount;
 
     public DebitCard(long id, TransactionManager transactionManager) {
         this.id = id;
@@ -24,7 +30,11 @@ public class DebitCard implements Account, BankEntity {
         this.id = id;
         this.transactionManager = transactionManager;
         this.entries = new Entries();
-        this.bonusAccount = new BonusAccount(-id, cashbackQuotient);
+        if (cashbackQuotient > 0 && cashbackQuotient < 1) {
+            this.bonusAccount = new BonusAccount(-id, cashbackQuotient);
+        } else {
+            throw new InvalidParameterException("Cashback quotient should be from 0 to 1");
+        }
     }
 
     public long getId() {
@@ -40,7 +50,7 @@ public class DebitCard implements Account, BankEntity {
             if (this.equals(transaction.getOriginator())) {
                 entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, -transaction.getAmount(), dateTime));
                 balance -= transaction.getAmount();
-                if (bonusAccount != null) {
+                if (bonusAccount != null && transaction.getBeneficiary() != null) {
                     Transaction cashbackTransaction = bonusAccount.getTransactionManager().createTransaction(transaction.getAmount() * bonusAccount.getCashbackQuotient(), bonusAccount, null);
                     bonusAccount.getTransactionManager().executeTransaction(cashbackTransaction);
                 }
@@ -52,7 +62,7 @@ public class DebitCard implements Account, BankEntity {
             if (this.equals(transaction.getOriginator())) {
                 entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, transaction.getAmount(), dateTime));
                 balance += transaction.getAmount();
-                if (bonusAccount != null) {
+                if (bonusAccount != null && transaction.getBeneficiary() != null) {
                     Transaction cashbackTransaction = bonusAccount.getTransactionManager().createTransaction(-transaction.getAmount() * bonusAccount.getCashbackQuotient(), null, bonusAccount);
                     bonusAccount.getTransactionManager().executeTransaction(cashbackTransaction);
                 }
