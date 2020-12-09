@@ -11,12 +11,9 @@ public class DebitCard implements Account, BankEntity {
     private final TransactionManager transactionManager;
     private final Entries entries;
     private double balance;
-
-    public BonusAccount getBonusAccount() {
-        return bonusAccount;
-    }
-
     private final BonusAccount bonusAccount;
+
+
 
     public DebitCard(long id, TransactionManager transactionManager) {
         this.id = id;
@@ -37,37 +34,46 @@ public class DebitCard implements Account, BankEntity {
         }
     }
 
+    public BonusAccount getBonusAccount() {
+        return bonusAccount;
+    }
+
     public long getId() {
         return id;
     }
 
     public void addEntry(Transaction transaction) {
         LocalDateTime dateTime = LocalDateTime.now();
-        if (entries.last() != null && !dateTime.isAfter(entries.last().getTime())) {
-            dateTime = entries.last().getTime().plusNanos(1L);
+        addEntry(transaction, dateTime);
+    }
+
+
+    public void addEntry(Transaction transaction, LocalDateTime ldt) {
+        if (entries.last() != null && ldt.isEqual(entries.last().getTime())) {
+            ldt = entries.last().getTime().plusNanos(1L);
         }
         if (!transaction.isRolledBack()) {
             if (this.equals(transaction.getOriginator())) {
-                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, -transaction.getAmount(), dateTime));
+                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, -transaction.getAmount(), ldt));
                 balance -= transaction.getAmount();
                 if (bonusAccount != null && transaction.getBeneficiary() != null) {
                     Transaction cashbackTransaction = bonusAccount.getTransactionManager().createTransaction(transaction.getAmount() * bonusAccount.getCashbackQuotient(), bonusAccount, null);
                     bonusAccount.getTransactionManager().executeTransaction(cashbackTransaction);
                 }
             } else if (this.equals(transaction.getBeneficiary())) {
-                entries.addEntry(new Entry(transaction.getOriginator(), transaction, transaction.getAmount(), dateTime));
+                entries.addEntry(new Entry(transaction.getOriginator(), transaction, transaction.getAmount(), ldt));
                 balance += transaction.getAmount();
             }
         } else {
             if (this.equals(transaction.getOriginator())) {
-                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, transaction.getAmount(), dateTime));
+                entries.addEntry(new Entry(transaction.getBeneficiary(), transaction, transaction.getAmount(), ldt));
                 balance += transaction.getAmount();
                 if (bonusAccount != null && transaction.getBeneficiary() != null) {
                     Transaction cashbackTransaction = bonusAccount.getTransactionManager().createTransaction(-transaction.getAmount() * bonusAccount.getCashbackQuotient(), null, bonusAccount);
                     bonusAccount.getTransactionManager().executeTransaction(cashbackTransaction);
                 }
             } else if (this.equals(transaction.getBeneficiary())) {
-                entries.addEntry(new Entry(transaction.getOriginator(), transaction, -transaction.getAmount(), dateTime));
+                entries.addEntry(new Entry(transaction.getOriginator(), transaction, -transaction.getAmount(), ldt));
                 balance -= transaction.getAmount();
             }
         }

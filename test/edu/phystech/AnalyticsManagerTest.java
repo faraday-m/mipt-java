@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -86,7 +88,7 @@ public class AnalyticsManagerTest {
         //given
         DebitCard freqBeneficiary = new DebitCard(1, transactionManager);
         DebitCard otherBeneficiary = new DebitCard(2, transactionManager);
-        DebitCard originator = new DebitCard(2, transactionManager);
+        DebitCard originator = new DebitCard(3, transactionManager);
         originator.addCash(10000);
         freqBeneficiary.addCash(5000);
         otherBeneficiary.addCash(5000);
@@ -146,9 +148,9 @@ public class AnalyticsManagerTest {
     public void accountsRangeFrom_returnsAccsWithBalanceGreaterThen5000_whenCalledWithBalanceComparator() {
         //given
         DebitCard acc1 = new DebitCard(1, transactionManager);
-        DebitCard acc2 = new DebitCard(1, transactionManager);
-        DebitCard acc3 = new DebitCard(1, transactionManager);
-        DebitCard acc4 = new DebitCard(1, transactionManager);
+        DebitCard acc2 = new DebitCard(2, transactionManager);
+        DebitCard acc3 = new DebitCard(3, transactionManager);
+        DebitCard acc4 = new DebitCard(4, transactionManager);
 
         acc1.addCash(10000);
         acc2.addCash(8000);
@@ -169,5 +171,33 @@ public class AnalyticsManagerTest {
         assertTrue(wealthiestAcccounts.contains(acc2));
         assertFalse(wealthiestAcccounts.contains(acc3));
         assertTrue(wealthiestAcccounts.contains(acc4));
+    }
+
+    @Test
+    public void maxExpenseAmountEntryWithinInterval_returnsLargestWithdrawInsideInterval_whenCalled() {
+        //given
+        DebitCard beneficiary = new DebitCard(1, transactionManager);
+        DebitCard originator = new DebitCard(2, transactionManager);
+        DebitCard originator2 = new DebitCard(3, transactionManager);
+        originator.addCash(10000);
+        originator2.addCash(10000);
+        Transaction transaction = transactionManager.createTransaction(1000, originator, beneficiary);
+        originator.addEntry(transaction, LocalDateTime.of(2007,1,1,0,0,0));
+        Transaction transaction2 = transactionManager.createTransaction(500, originator, beneficiary);
+        originator.addEntry(transaction2, LocalDateTime.of(2008,1,1,0,0,0));
+        Transaction transaction3 = transactionManager.createTransaction(100, originator, beneficiary);
+        originator.addEntry(transaction3, LocalDateTime.of(2009,1,1,0,0,0));
+        Transaction transaction4 = transactionManager.createTransaction(2000, originator, beneficiary);
+        originator.addEntry(transaction4, LocalDateTime.of(2019,1,1,0,0,0));
+        Transaction transaction5 = transactionManager.createTransaction(2000, originator2, beneficiary);
+        originator2.addEntry(transaction5, LocalDateTime.of(2017,1,1,0,0,0));
+        List<DebitCard> accounts = new ArrayList<>();
+        accounts.add(originator);
+        accounts.add(originator2);
+        //when
+        Optional<Entry> entry = analyticsManager.maxExpenseAmountEntryWithinInterval(accounts, LocalDate.of(2007,6,1), LocalDate.of(2010,1,1));
+        //then
+        assertTrue(entry.isPresent());
+        assertEquals(-500, entry.get().getAmount(), 0.0);
     }
 }

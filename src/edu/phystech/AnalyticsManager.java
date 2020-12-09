@@ -42,6 +42,12 @@ public class AnalyticsManager {
         return accounts.stream().filter(acc -> comparator.compare(acc, minAccount) >= 0).collect(Collectors.toList());
     }
 
+    public Optional<Entry> maxExpenseAmountEntryWithinInterval(List<DebitCard> accounts, LocalDate from, LocalDate to) {
+        return accounts.stream()
+                .map(a -> a.history(from, to))
+                .flatMap(Collection::stream)
+                .max(Comparator.comparingDouble((Entry entry) -> Math.abs(entry.getAmount())));
+    }
 }
 
 
