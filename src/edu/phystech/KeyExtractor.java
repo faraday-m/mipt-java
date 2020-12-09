@@ -1,6 +1,5 @@
 package edu.phystech;
 
-
-public interface KeyExtractor {
-    Object extract(Object entity);
+public interface KeyExtractor<K, V extends BankEntity> {
+    K extract(V entity);
 }

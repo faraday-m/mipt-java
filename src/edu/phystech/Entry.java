@@ -7,55 +7,49 @@ import java.time.LocalDateTime;
  * Amount can be either positive or negative depending on originator or beneficiary
  */
 public class Entry implements Comparable, BankEntity {
-    private static int idSequence = 0;
-    private final Account account;
-    private final long transactionId;
-    private final double amount;
+    private final Account account; // other side of transaction
+    private final Transaction transaction;
+    private final double amount; // less than 0 if account is beneficiary of transaction
     private final LocalDateTime time;
     private final long id;
+    private static long id_sequence = 1;
 
     public Entry(Account account, Transaction transaction, double amount, LocalDateTime time) {
         this.account = account;
-        this.transactionId = transaction.getId();
+        this.transaction = transaction;
         this.amount = amount;
         this.time = time;
-        this.id = idSequence++;
-    }
-    public Entry(Account account, long transactionId, double amount, LocalDateTime time) {
-        this.account = account;
-        this.transactionId = transactionId;
-        this.amount = amount;
-        this.time = time;
-        this.id = idSequence++;
+        this.id = id_sequence++;
     }
 
-    public Account getAccount() {
-        return account;
+    @Override
+    public int compareTo(Object o) {
+        if (this.equals(o)) {
+            return 0;
+        }
+        if (!(o instanceof Entry)) {
+            throw new ClassCastException(o.getClass().toString());
+        } else {
+            Entry other = (Entry) o;
+            return this.time.compareTo(other.time);
+        }
     }
 
-    public Transaction getTransaction(Account originator) {
-        return TransactionManager.getTransaction(originator, transactionId);
-    }
-
-    public double getAmount() {
-        return amount;
+    public Transaction getTransaction() {
+        return transaction;
     }
 
     public LocalDateTime getTime() {
         return time;
     }
 
-    @Override
-    public int compareTo(Object o) {
-        if (o instanceof Entry) {
-            return this.getTime().compareTo(((Entry) o).getTime());
-        }
-        throw new RuntimeException(o.getClass() + " is not an instance of Entry");
+    public double getAmount() {
+        return amount;
     }
 
     @Override
-    public EntityKey getKey() {
-        return new SimpleEntityKey(EntityKey.EntityType.ENTRY, id);
+    public long getId() {
+        return id;
     }
 }
 

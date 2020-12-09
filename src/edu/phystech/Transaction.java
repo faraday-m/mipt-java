@@ -1,18 +1,22 @@
 package edu.phystech;
 
-import java.time.LocalDateTime;
-
-public class Transaction implements BankEntity {
-    private static long id_sequence = 0;
-
+public class Transaction implements Comparable {
     private final long id;
     private final double amount;
     private final Account originator;
     private final Account beneficiary;
-    private final boolean executed;
-    private final boolean rolledBack;
+    private boolean executed;
+    private boolean rolledBack;
 
-    public long getId() { return id; }
+    public Transaction(long id, double amount, Account originator, Account beneficiary, boolean executed, boolean rolledBack) {
+        this.id = id;
+        this.amount = amount;
+        this.originator = originator;
+        this.beneficiary = beneficiary;
+        this.executed = executed;
+        this.rolledBack = rolledBack;
+    }
+
     public double getAmount() {
         return amount;
     }
@@ -25,30 +29,12 @@ public class Transaction implements BankEntity {
         return beneficiary;
     }
 
-    public boolean isExecuted() {
-        return executed;
-    }
-
     public boolean isRolledBack() {
         return rolledBack;
     }
 
-    private Transaction(long id, double amount, Account originator, Account beneficiary, boolean executed, boolean rolledBack) {
-        this.id = id;
-        this.amount = amount;
-        this.originator = originator;
-        this.beneficiary = beneficiary;
-        this.executed = executed;
-        this.rolledBack = rolledBack;
-    }
-
-    public Transaction(double amount, Account originator, Account beneficiary) {
-        this.id = id_sequence++;
-        this.amount = amount;
-        this.originator = originator;
-        this.beneficiary = beneficiary;
-        this.executed = false;
-        this.rolledBack = false;
+    public boolean isExecuted() {
+        return executed;
     }
 
     /**
@@ -56,16 +42,17 @@ public class Transaction implements BankEntity {
      * @throws IllegalStateException when was already executed
      */
     public Transaction execute() {
-        if (this.isExecuted()) throw new IllegalStateException("Transaction was already executed");
-        LocalDateTime now = LocalDateTime.now();
-        Transaction transaction = new Transaction(id, amount, originator, beneficiary, true, false);
-        if (originator != null) {
-            originator.withdraw(amount);
-            originator.addEntry(new Entry(beneficiary, transaction, -amount, now));
+        if (this.executed) {
+            throw new IllegalStateException("Transaction is already executed");
         }
-        beneficiary.add(amount);
-        beneficiary.addEntry(new Entry(originator, transaction, amount, now));
-        return transaction;
+        if (this.originator != null) {
+            this.originator.addEntry(this);
+        }
+        if (this.beneficiary != null) {
+            this.beneficiary.addEntry(this);
+        }
+        this.executed = true;
+        return this;
     }
 
     /**
@@ -73,22 +60,39 @@ public class Transaction implements BankEntity {
      * @throws IllegalStateException when was already rolled back
      */
     public Transaction rollback() {
-        if (this.isExecuted() == false) throw new IllegalStateException("Cannot rollback transaction that hasn't been executed");
-        if (this.isRolledBack()) throw new IllegalStateException("Transaction was already rolled back");
-        LocalDateTime now = LocalDateTime.now();
-        Transaction transaction = new Transaction(id, amount, originator, beneficiary, true, true);
-        if (originator != null) {
-            originator.add(amount);
-            originator.addEntry(new Entry(beneficiary, transaction, amount, now));
+        if (this.rolledBack) {
+            throw new IllegalStateException("Transaction is already rolled back");
         }
-        beneficiary.withdraw(amount); //change to withdrawcash
-        beneficiary.addEntry(new Entry(originator, transaction, -amount, now));
-        return transaction;
+        if (!this.executed) {
+            throw new IllegalStateException("Transaction was not executed");
+        }
+        this.rolledBack = true;
+        if (this.originator != null) {
+            this.originator.addEntry(this);
+        }
+        if (this.beneficiary != null) {
+            this.beneficiary.addEntry(this);
+        }
+        return this;
     }
 
     @Override
-    public EntityKey getKey() {
-        return new SimpleEntityKey(EntityKey.EntityType.TRANSACTION, id);
+    public int compareTo(Object o) {
+        if (this.equals(o)) {
+            return 0;
+        }
+        if (!(o instanceof Transaction)) {
+            throw new ClassCastException(o.getClass().toString());
+        } else {
+            Transaction other = (Transaction) o;
+            int cmp = Double.compare(this.amount, other.amount);
+            if (cmp != 0) {
+                return cmp;
+            }
+            else {
+                return Integer.compare(hashCode(), other.hashCode());
+            }
+        }
     }
 }
 

@@ -1,73 +1,48 @@
 package edu.phystech;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class SimpleEntitiesStorage<T extends BankEntity> implements BankEntitiesStorage<T> {
-    private final Map<Object, List<T>> storage = new HashMap<>();
-    private final KeyExtractor keyExtractor;
+public class SimpleEntitiesStorage<K,V extends BankEntity> implements BankEntitiesStorage<K, V> {
+    private final Map<K, V> storage = new HashMap<>();
+    private final KeyExtractor<K, ? super V> keyExtractor;
 
-    public SimpleEntitiesStorage(KeyExtractor keyExtractor) {
+    public SimpleEntitiesStorage(KeyExtractor<K, ? super V> keyExtractor) {
         this.keyExtractor = keyExtractor;
     }
 
+
     @Override
-    public void save(T entity) {
-        if (storage.containsKey(keyExtractor.extract(entity))) {
-            if (entity instanceof Transaction) {
-                storage.get(keyExtractor.extract(entity)).removeIf(t -> (((Transaction) t).getId() == ((Transaction) entity).getId()));
-            }
-            storage.get(keyExtractor.extract(entity)).add(entity);
-        } else {
-            ArrayList<T> list = new ArrayList<>();
-            list.add(entity);
-            storage.put(keyExtractor.extract(entity), list);
+    public void save(V entity) {
+        if (entity == null) {
+            throw new NullPointerException();
         }
+        K key = keyExtractor.extract(entity);
+        storage.put(key, entity);
     }
 
     @Override
-    public void saveAll(Collection<T> entities) {
-        for (T t : entities) {
-            save(t);
-        }
+    public void saveAll(List<? extends V> entities) {
+        entities.forEach(this::save);
     }
 
     @Override
-    public List<T> findByKey(Object key) {
-       if (storage.get(key) != null) {
-            return storage.get(key);
-       }
-       return null;
+    public V findByKey(K key) {
+        return storage.get(key);
     }
 
     @Override
-    public List<T> findAll() {
-        return combineLists(storage.values());
-    }
-
-    private List<T> combineLists(Collection<List<T>> args) {
-        List<T> combinedList = new ArrayList<>();
-        for (List<T> arg : args) {
-            combinedList.addAll(arg);
-        }
-        return combinedList;
+    public List<V> findAll() {
+        return new ArrayList<>(storage.values());
     }
 
     @Override
-    public void deleteByKey(Object key) {
+    public void deleteByKey(K key) {
         storage.remove(key);
     }
 
     @Override
-    public void deleteAll(List<T> entities) {
-        for (T entity : entities) {
-            Object key = keyExtractor.extract(entity);
-            List<T> keys = new ArrayList<>(storage.get(key));
-            for (T ent2 : keys) {
-                if (entity.equals(ent2)) {
-                    storage.get(key).remove(entity);
-                }
-            }
-        }
-
+    public void deleteAll(List<? extends V> entities) {
+        entities.stream().map(keyExtractor::extract).forEach(this::deleteByKey);
     }
 }

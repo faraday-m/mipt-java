@@ -1,7 +1,8 @@
 package edu.phystech;
 
-public class SimpleKeyExtractor implements KeyExtractor {
-    public Object extract(Object entity) {
-        return entity.hashCode();
+public class SimpleKeyExtractor implements KeyExtractor<Long, BankEntity> {
+    @Override
+    public Long extract(BankEntity entity) {
+        return entity.getId();
     }
 }
