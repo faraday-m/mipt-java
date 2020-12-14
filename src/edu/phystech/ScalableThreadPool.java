@@ -1,9 +1,6 @@
 package edu.phystech;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class ScalableThreadPool implements ThreadPool {
   private final List<Thread> threads;
@@ -11,7 +8,34 @@ public class ScalableThreadPool implements ThreadPool {
   private final int minSize;
   private final int maxSize;
   private volatile int tasksInWork = 0;
-  
+  private volatile int threadsSize = 0;
+  private volatile boolean stopTasks = false;
+
+  class Worker implements Runnable {
+    @Override
+    public void run() {
+      refreshThreads();
+      while (!stopTasks) {
+        try {
+          Runnable task;
+          synchronized (tasks) {
+            while (tasks.isEmpty() && !stopTasks && tasksInWork < threadsSize) {
+              tasks.wait();
+            }
+            task = tasks.poll();
+            tasks.notifyAll();
+          }
+          if (task != null) {
+            atomicInc();
+            task.run();
+            atomicDec();
+          }
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }}
+  }
+
   public ScalableThreadPool(int minSize, int maxSize) {
     threads = new ArrayList<>(minSize);
     this.minSize = minSize;
@@ -32,47 +56,58 @@ public class ScalableThreadPool implements ThreadPool {
   public void execute(Runnable runnable) {
     synchronized (tasks) {
       tasks.add(runnable);
-      synchronized (threads) {
-        if (threads.size() < maxSize) {
-          Thread thread = getThread();
-          threads.add(thread);
-          System.out.println("Thread " + (threads.size()-1) + " started");
-          thread.start();
-        }
-      }
       tasks.notifyAll();
+    }
+    if (threadsSize < maxSize && tasksInWork == threadsSize) {
+      Thread thread = getThread();
+      threads.add(thread);
+      System.out.println("Thread " + (threadsSize-1) + " started");
+      thread.start();
+    }
+  }
+
+  private void atomicInc() {
+    synchronized (tasks) {
+      tasksInWork += 1;
+      System.out.println("Tasks in work: " + tasksInWork);
+      tasks.notifyAll();
+    }
+  }
+
+  private void atomicDec() {
+    synchronized (tasks) {
+      tasksInWork -= 1;
+      System.out.println("Tasks in work: " + tasksInWork);
+      tasks.notifyAll();
+    }
+  }
+
+
+  private void refreshThreads() {
+    synchronized (threads) {
+      threadsSize = threads.size();
+      System.out.println("Threads count: " + threadsSize);
+      threads.notifyAll();
     }
   }
   
   private Thread getThread() {
-    return new Thread(() -> {
-      while (!Thread.currentThread().isInterrupted()) {
-        try {
-        Runnable task;
-        synchronized (tasks) {
-          while (tasks.isEmpty() && tasksInWork < minSize) {
-            tasks.wait();
-          }
-          task = tasks.poll();
-        }
-        if (task != null) {
-          tasksInWork += 1;
-          System.out.println("Tasks in work: " + tasksInWork);
-          task.run();
-          tasksInWork -= 1;
-          System.out.println("Tasks in work: " + tasksInWork);
-      }
-    } catch (Exception e) {
-      Thread.currentThread().interrupt();
-    }
-    }});
+    return new Thread(new Worker());
   }
-  
-  public void interrupt() {
+
+
+  public void interrupt() throws InterruptedException {
     while (threads.stream().anyMatch(Thread::isAlive)) {
+      stopTasks = true;
+      synchronized (tasks) {
+        tasks.notifyAll();
+      }
       for (Thread t : threads) {
-        t.interrupt();
+        t.join();
       }
     }
+    System.out.println("Threads stopped");
   }
+
+
 }

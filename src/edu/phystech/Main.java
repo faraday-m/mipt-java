@@ -19,7 +19,7 @@ public class Main {
       });
     }
     try {
-      sleep(5000);
+      sleep(3000);
       System.out.println("Joining...");
       ftp.interrupt();
     } catch (Exception e) {
@@ -35,7 +35,7 @@ public class Main {
       stp.execute(() -> {
         try {
           System.out.println("Task " + finalI);
-          sleep(1000);
+          sleep(2000);
           System.out.println("Wake up");
         } catch (InterruptedException e) {
           e.printStackTrace();
@@ -53,6 +53,6 @@ public class Main {
   
   public static void main(String[] args) {
     scalableThreadpoolTest();
-    fixedThreadpoolTest();
+    //fixedThreadpoolTest();
   }
 }
